@@ -42,19 +42,19 @@
 #include "net/ipv6/multicast/uip-mcast6.h"
 
 /* DAG Mode of Operation */
-#define RPL_MOP_NO_DOWNWARD_ROUTES      0
-#define RPL_MOP_NON_STORING             1
-#define RPL_MOP_STORING_NO_MULTICAST    2
-#define RPL_MOP_STORING_MULTICAST       3
+#define RPL_MOP_NO_DOWNWARD_ROUTES 0
+#define RPL_MOP_NON_STORING 1
+#define RPL_MOP_STORING_NO_MULTICAST 2
+#define RPL_MOP_STORING_MULTICAST 3
 
 /* RPL Mode of operation */
-#ifdef  RPL_CONF_MOP
-#define RPL_MOP_DEFAULT                 RPL_CONF_MOP
+#ifdef RPL_CONF_MOP
+#define RPL_MOP_DEFAULT RPL_CONF_MOP
 #else /* RPL_CONF_MOP */
 #if RPL_WITH_MULTICAST
-#define RPL_MOP_DEFAULT                 RPL_MOP_STORING_MULTICAST
+#define RPL_MOP_DEFAULT RPL_MOP_STORING_MULTICAST
 #else
-#define RPL_MOP_DEFAULT                 RPL_MOP_STORING_NO_MULTICAST
+#define RPL_MOP_DEFAULT RPL_MOP_STORING_NO_MULTICAST
 #endif /* RPL_WITH_MULTICAST */
 #endif /* RPL_CONF_MOP */
 
@@ -115,7 +115,10 @@
 #ifdef RPL_CONF_SUPPORTED_OFS
 #define RPL_SUPPORTED_OFS RPL_CONF_SUPPORTED_OFS
 #else /* RPL_CONF_SUPPORTED_OFS */
-#define RPL_SUPPORTED_OFS {&rpl_mrhof}
+#define RPL_SUPPORTED_OFS \
+  {                       \
+    &rpl_of0            \
+  }
 #endif /* RPL_CONF_SUPPORTED_OFS */
 
 /*
@@ -143,7 +146,7 @@
 #ifdef RPL_CONF_DEFAULT_INSTANCE
 #define RPL_DEFAULT_INSTANCE RPL_CONF_DEFAULT_INSTANCE
 #else
-#define RPL_DEFAULT_INSTANCE	       0x1e
+#define RPL_DEFAULT_INSTANCE 0x1e
 #endif /* RPL_CONF_DEFAULT_INSTANCE */
 
 /*
@@ -160,18 +163,18 @@
  * Maximum number of concurrent RPL instances.
  */
 #ifdef RPL_CONF_MAX_INSTANCES
-#define RPL_MAX_INSTANCES     RPL_CONF_MAX_INSTANCES
+#define RPL_MAX_INSTANCES RPL_CONF_MAX_INSTANCES
 #else
-#define RPL_MAX_INSTANCES     1
+#define RPL_MAX_INSTANCES 1
 #endif /* RPL_CONF_MAX_INSTANCES */
 
 /*
  * Maximum number of DAGs within an instance.
  */
 #ifdef RPL_CONF_MAX_DAG_PER_INSTANCE
-#define RPL_MAX_DAG_PER_INSTANCE     RPL_CONF_MAX_DAG_PER_INSTANCE
+#define RPL_MAX_DAG_PER_INSTANCE RPL_CONF_MAX_DAG_PER_INSTANCE
 #else
-#define RPL_MAX_DAG_PER_INSTANCE     2
+#define RPL_MAX_DAG_PER_INSTANCE 2
 #endif /* RPL_CONF_MAX_DAG_PER_INSTANCE */
 
 /*
@@ -203,22 +206,22 @@
  * except if it is the currently joined DODAG.
  */
 #ifdef RPL_CONF_DAG_LIFETIME
-#define RPL_DAG_LIFETIME                    RPL_CONF_DAG_LIFETIME
+#define RPL_DAG_LIFETIME RPL_CONF_DAG_LIFETIME
 #else
-#define RPL_DAG_LIFETIME                    3
+#define RPL_DAG_LIFETIME 3
 #endif /* RPL_CONF_DAG_LIFETIME */
 
 /*
  *
  */
 #ifndef RPL_CONF_DAO_SPECIFY_DAG
-  #if RPL_MAX_DAG_PER_INSTANCE > 1
-    #define RPL_DAO_SPECIFY_DAG 1
-  #else
-    #define RPL_DAO_SPECIFY_DAG 0
-  #endif /* RPL_MAX_DAG_PER_INSTANCE > 1 */
+#if RPL_MAX_DAG_PER_INSTANCE > 1
+#define RPL_DAO_SPECIFY_DAG 1
 #else
-  #define RPL_DAO_SPECIFY_DAG RPL_CONF_DAO_SPECIFY_DAG
+#define RPL_DAO_SPECIFY_DAG 0
+#endif /* RPL_MAX_DAG_PER_INSTANCE > 1 */
+#else
+#define RPL_DAO_SPECIFY_DAG RPL_CONF_DAO_SPECIFY_DAG
 #endif /* RPL_CONF_DAO_SPECIFY_DAG */
 
 /*
@@ -230,9 +233,9 @@
  * ContikiRPL thus sets the default to 2^12 ms = 4.096 s.
  */
 #ifdef RPL_CONF_DIO_INTERVAL_MIN
-#define RPL_DIO_INTERVAL_MIN        RPL_CONF_DIO_INTERVAL_MIN
+#define RPL_DIO_INTERVAL_MIN RPL_CONF_DIO_INTERVAL_MIN
 #else
-#define RPL_DIO_INTERVAL_MIN        12
+#define RPL_DIO_INTERVAL_MIN 12
 #endif
 
 /*
@@ -243,9 +246,9 @@
  * unsuitable when we start with a minimum interval of 2^12.
  */
 #ifdef RPL_CONF_DIO_INTERVAL_DOUBLINGS
-#define RPL_DIO_INTERVAL_DOUBLINGS  RPL_CONF_DIO_INTERVAL_DOUBLINGS
+#define RPL_DIO_INTERVAL_DOUBLINGS RPL_CONF_DIO_INTERVAL_DOUBLINGS
 #else
-#define RPL_DIO_INTERVAL_DOUBLINGS  8
+#define RPL_DIO_INTERVAL_DOUBLINGS 8
 #endif
 
 /*
@@ -256,9 +259,9 @@
  * operation by tuning this parameter for specific deployments.
  */
 #ifdef RPL_CONF_DIO_REDUNDANCY
-#define RPL_DIO_REDUNDANCY          RPL_CONF_DIO_REDUNDANCY
+#define RPL_DIO_REDUNDANCY RPL_CONF_DIO_REDUNDANCY
 #else
-#define RPL_DIO_REDUNDANCY          10
+#define RPL_DIO_REDUNDANCY 10
 #endif
 
 /*
@@ -266,27 +269,27 @@
  * used in RPL lifetime values, in seconds.
  */
 #ifndef RPL_CONF_DEFAULT_LIFETIME_UNIT
-#define RPL_DEFAULT_LIFETIME_UNIT       60
+#define RPL_DEFAULT_LIFETIME_UNIT 60
 #else
-#define RPL_DEFAULT_LIFETIME_UNIT       RPL_CONF_DEFAULT_LIFETIME_UNIT
+#define RPL_DEFAULT_LIFETIME_UNIT RPL_CONF_DEFAULT_LIFETIME_UNIT
 #endif
 
 /*
  * Default route lifetime as a multiple of the lifetime unit.
  */
 #ifndef RPL_CONF_DEFAULT_LIFETIME
-#define RPL_DEFAULT_LIFETIME            30
+#define RPL_DEFAULT_LIFETIME 30
 #else
-#define RPL_DEFAULT_LIFETIME            RPL_CONF_DEFAULT_LIFETIME
+#define RPL_DEFAULT_LIFETIME RPL_CONF_DEFAULT_LIFETIME
 #endif
 
 /*
  * DAG preference field.
  */
 #ifdef RPL_CONF_PREFERENCE
-#define RPL_PREFERENCE              RPL_CONF_PREFERENCE
+#define RPL_PREFERENCE RPL_CONF_PREFERENCE
 #else
-#define RPL_PREFERENCE              0
+#define RPL_PREFERENCE 0
 #endif
 
 /*
@@ -382,19 +385,19 @@
 /*
  * Interval of DIS transmission.
  */
-#ifdef  RPL_CONF_DIS_INTERVAL
-#define RPL_DIS_INTERVAL                RPL_CONF_DIS_INTERVAL
+#ifdef RPL_CONF_DIS_INTERVAL
+#define RPL_DIS_INTERVAL RPL_CONF_DIS_INTERVAL
 #else
-#define RPL_DIS_INTERVAL                60
+#define RPL_DIS_INTERVAL 60
 #endif
 
 /*
  * Added delay of first DIS transmission after boot.
  */
-#ifdef  RPL_CONF_DIS_START_DELAY
-#define RPL_DIS_START_DELAY             RPL_CONF_DIS_START_DELAY
+#ifdef RPL_CONF_DIS_START_DELAY
+#define RPL_DIS_START_DELAY RPL_CONF_DIS_START_DELAY
 #else
-#define RPL_DIS_START_DELAY             5
+#define RPL_DIS_START_DELAY 5
 #endif
 
 #endif /* RPL_CONF_H */

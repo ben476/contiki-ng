@@ -1,5 +1,21 @@
 {
-  "image": "contiker/contiki-ng:latest",
-  "features": {
-  }
+  "build": {
+    // Sets the run context to one level up instead of the .devcontainer folder.
+    "context": "..",
+    // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+    "dockerfile": "../Dockerfile"
+  },
+  "features": {},
+  "containerEnv": {
+    "DISPLAY": "host.docker.internal:0"
+  },
+  "mounts": [
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached"
+  ],
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--sysctl",
+    "net.ipv6.conf.all.disable_ipv6=0",
+    "--privileged"
+  ]
 }
