@@ -1,0 +1,23 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "/bin": true,
+        "/boot": true,
+        "/cdrom": true,
+        "/dev": true,
+        "/proc": true,
+        "/etc": true,
+        // "tools": true,
+        // "build": true,
+        // "tests": true,
+        // "simulations": true,
+        // "doc": true,
+        // "examples": true,
+    },
+    "C_Cpp.workspaceParsingPriority": "low"
+}

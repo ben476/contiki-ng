@@ -52,7 +52,7 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"
-#define LOG_LEVEL LOG_LEVEL_RPL
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 /* RFC6551 and RFC6719 do not mandate the use of a specific formula to
  * compute the ETX value. This MRHOF implementation relies on the value
@@ -68,7 +68,7 @@
  * While this feature helps achieve extra relaibility, it also results in
  * added churn. In networks with high congestion or poor links, this can lead
  * to poor connectivity due to more parent switches, loops, Trickle resets, etc.
-  */
+ */
 #ifdef RPL_MRHOF_CONF_SQUARED_ETX
 #define RPL_MRHOF_SQUARED_ETX RPL_MRHOF_CONF_SQUARED_ETX
 #else /* RPL_MRHOF_CONF_SQUARED_ETX */
@@ -78,25 +78,25 @@
 /* Configuration parameters of RFC6719. Reject parents that have a higher
  * link metric than the following. The default value is 512. */
 #ifdef RPL_MRHOF_CONF_MAX_LINK_METRIC
-#define MAX_LINK_METRIC     RPL_MRHOF_CONF_MAX_LINK_METRIC
-#else /* RPL_MRHOF_CONF_MAX_LINK_METRIC */
-#define MAX_LINK_METRIC     512 /* Eq ETX of 4 */
-#endif /* RPL_MRHOF_CONF_MAX_LINK_METRIC */
+#define MAX_LINK_METRIC RPL_MRHOF_CONF_MAX_LINK_METRIC
+#else                       /* RPL_MRHOF_CONF_MAX_LINK_METRIC */
+#define MAX_LINK_METRIC 512 /* Eq ETX of 4 */
+#endif                      /* RPL_MRHOF_CONF_MAX_LINK_METRIC */
 
 /* Reject parents that have a higher path cost than the following. */
 #ifdef RPL_MRHOF_CONF_MAX_PATH_COST
-#define MAX_PATH_COST      RPL_MRHOF_CONF_MAX_PATH_COST
-#else /*  RPL_MRHOF_CONF_MAX_PATH_COST */
-#define MAX_PATH_COST      32768   /* Eq path ETX of 256 */
-#endif /* RPL_MRHOF_CONF_MAX_PATH_COST */
+#define MAX_PATH_COST RPL_MRHOF_CONF_MAX_PATH_COST
+#else                       /*  RPL_MRHOF_CONF_MAX_PATH_COST */
+#define MAX_PATH_COST 32768 /* Eq path ETX of 256 */
+#endif                      /* RPL_MRHOF_CONF_MAX_PATH_COST */
 
 #if !RPL_MRHOF_SQUARED_ETX
 /* Hysteresis of MRHOF: the rank must differ more than PARENT_SWITCH_THRESHOLD_DIV
  * in order to switch preferred parent. Default in RFC6719: 192, eq ETX of 1.5. */
 #define RANK_THRESHOLD 192 /* Eq ETX of 1.5 */
-#else /* !RPL_MRHOF_SQUARED_ETX */
+#else                      /* !RPL_MRHOF_SQUARED_ETX */
 #define RANK_THRESHOLD 384 /* Eq ETX of sqrt(3) */
-#endif /* !RPL_MRHOF_SQUARED_ETX */
+#endif                     /* !RPL_MRHOF_SQUARED_ETX */
 
 /* Additional, custom hysteresis based on time. If a neighbor was consistently
  * better than our preferred parent for at least TIME_THRESHOLD, switch to
@@ -107,12 +107,13 @@
 static void
 reset(void)
 {
-  LOG_INFO("reset MRHOF\n");
+  // LOG_INFO("reset MRHOF\n");
 }
 /*---------------------------------------------------------------------------*/
 static uint16_t
 nbr_link_metric(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_link_metric\n");
   const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   return stats != NULL ? stats->etx : 0xffff;
 }
@@ -120,10 +121,11 @@ nbr_link_metric(rpl_nbr_t *nbr)
 static uint16_t
 link_metric_to_rank(uint16_t etx)
 {
+  // LOG_INFO("link_metric_to_rank\n");
 #if RPL_MRHOF_SQUARED_ETX
   uint32_t squared_etx = ((uint32_t)etx * etx) / LINK_STATS_ETX_DIVISOR;
   return (uint16_t)MIN(squared_etx, 0xffff);
-#else /* RPL_MRHOF_SQUARED_ETX */
+#else  /* RPL_MRHOF_SQUARED_ETX */
   return etx;
 #endif /* RPL_MRHOF_SQUARED_ETX */
 }
@@ -131,26 +133,29 @@ link_metric_to_rank(uint16_t etx)
 static uint16_t
 nbr_path_cost(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_path_cost\n");
   uint16_t base;
 
-  if(nbr == NULL) {
+  if (nbr == NULL)
+  {
     return 0xffff;
   }
 
 #if RPL_WITH_MC
   /* Handle the different MC types */
-  switch(curr_instance.mc.type) {
-    case RPL_DAG_MC_ETX:
-      base = nbr->mc.obj.etx;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      base = nbr->mc.obj.energy.energy_est << 8;
-      break;
-    default:
-      base = nbr->rank;
-      break;
+  switch (curr_instance.mc.type)
+  {
+  case RPL_DAG_MC_ETX:
+    base = nbr->mc.obj.etx;
+    break;
+  case RPL_DAG_MC_ENERGY:
+    base = nbr->mc.obj.energy.energy_est << 8;
+    break;
+  default:
+    base = nbr->rank;
+    break;
   }
-#else /* RPL_WITH_MC */
+#else  /* RPL_WITH_MC */
   base = nbr->rank;
 #endif /* RPL_WITH_MC */
 
@@ -161,10 +166,12 @@ nbr_path_cost(rpl_nbr_t *nbr)
 static rpl_rank_t
 rank_via_nbr(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("rank_via_nbr\n");
   uint16_t min_hoprankinc;
   uint16_t path_cost;
 
-  if(nbr == NULL) {
+  if (nbr == NULL)
+  {
     return RPL_INFINITE_RANK;
   }
 
@@ -178,6 +185,7 @@ rank_via_nbr(rpl_nbr_t *nbr)
 static int
 nbr_has_usable_link(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_has_usable_link\n");
   uint16_t link_metric = nbr_link_metric(nbr);
   /* Exclude links with too high link metrics  */
   return link_metric <= MAX_LINK_METRIC;
@@ -186,6 +194,7 @@ nbr_has_usable_link(rpl_nbr_t *nbr)
 static int
 nbr_is_acceptable_parent(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_is_acceptable_parent\n");
   uint16_t path_cost = nbr_path_cost(nbr);
   /* Exclude links with too high link metrics or path cost (RFC6719, 3.2.2) */
   return nbr_has_usable_link(nbr) && path_cost <= MAX_PATH_COST;
@@ -194,12 +203,12 @@ nbr_is_acceptable_parent(rpl_nbr_t *nbr)
 static int
 within_hysteresis(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("within_hysteresis\n");
   uint16_t path_cost = nbr_path_cost(nbr);
   uint16_t parent_path_cost = nbr_path_cost(curr_instance.dag.preferred_parent);
 
   int within_rank_hysteresis = path_cost + RANK_THRESHOLD > parent_path_cost;
-  int within_time_hysteresis = nbr->better_parent_since == 0
-    || (clock_time() - nbr->better_parent_since) <= TIME_THRESHOLD;
+  int within_time_hysteresis = nbr->better_parent_since == 0 || (clock_time() - nbr->better_parent_since) <= TIME_THRESHOLD;
 
   /* As we want to consider neighbors that are either beyond the rank or time
   hystereses, return 1 here iff the neighbor is within both hystereses. */
@@ -209,26 +218,32 @@ within_hysteresis(rpl_nbr_t *nbr)
 static rpl_nbr_t *
 best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 {
+  // LOG_INFO("best_parent\n");
+
   int nbr1_is_acceptable;
   int nbr2_is_acceptable;
 
   nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
   nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
 
-  if(!nbr1_is_acceptable) {
+  if (!nbr1_is_acceptable)
+  {
     return nbr2_is_acceptable ? nbr2 : NULL;
   }
-  if(!nbr2_is_acceptable) {
+  if (!nbr2_is_acceptable)
+  {
     return nbr1_is_acceptable ? nbr1 : NULL;
   }
 
   /* Maintain stability of the preferred parent. Switch only if the gain
   is greater than RANK_THRESHOLD, or if the neighbor has been better than the
   current parent for at more than TIME_THRESHOLD. */
-  if(nbr1 == curr_instance.dag.preferred_parent && within_hysteresis(nbr2)) {
+  if (nbr1 == curr_instance.dag.preferred_parent && within_hysteresis(nbr2))
+  {
     return nbr1;
   }
-  if(nbr2 == curr_instance.dag.preferred_parent && within_hysteresis(nbr1)) {
+  if (nbr2 == curr_instance.dag.preferred_parent && within_hysteresis(nbr1))
+  {
     return nbr2;
   }
 
@@ -239,67 +254,76 @@ best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 static void
 update_metric_container(void)
 {
+  // LOG_INFO("update_metric_container\n");
   curr_instance.mc.type = RPL_DAG_MC_NONE;
 }
-#else /* RPL_WITH_MC */
+#else  /* RPL_WITH_MC */
 static void
 update_metric_container(void)
 {
+  // LOG_INFO("update_metric_container\n");
   uint16_t path_cost;
   uint8_t type;
 
-  if(!curr_instance.used) {
+  if (!curr_instance.used)
+  {
     LOG_WARN("cannot update the metric container when not joined\n");
     return;
   }
 
-  if(curr_instance.dag.rank == ROOT_RANK) {
+  if (curr_instance.dag.rank == ROOT_RANK)
+  {
     /* Configure MC at root only, other nodes are auto-configured when joining */
     curr_instance.mc.type = RPL_DAG_MC;
     curr_instance.mc.flags = 0;
     curr_instance.mc.aggr = RPL_DAG_MC_AGGR_ADDITIVE;
     curr_instance.mc.prec = 0;
     path_cost = curr_instance.dag.rank;
-  } else {
+  }
+  else
+  {
     path_cost = nbr_path_cost(curr_instance.dag.preferred_parent);
   }
 
   /* Handle the different MC types */
-  switch(curr_instance.mc.type) {
-    case RPL_DAG_MC_NONE:
-      break;
-    case RPL_DAG_MC_ETX:
-      curr_instance.mc.length = sizeof(curr_instance.mc.obj.etx);
-      curr_instance.mc.obj.etx = path_cost;
-      break;
-    case RPL_DAG_MC_ENERGY:
-      curr_instance.mc.length = sizeof(curr_instance.mc.obj.energy);
-      if(curr_instance.dag.rank == ROOT_RANK) {
-        type = RPL_DAG_MC_ENERGY_TYPE_MAINS;
-      } else {
-        type = RPL_DAG_MC_ENERGY_TYPE_BATTERY;
-      }
-      curr_instance.mc.obj.energy.flags = type << RPL_DAG_MC_ENERGY_TYPE;
-      /* Energy_est is only one byte, use the least significant byte of the path metric. */
-      curr_instance.mc.obj.energy.energy_est = path_cost >> 8;
-      break;
-    default:
-      LOG_WARN("MRHOF, non-supported MC %u\n", curr_instance.mc.type);
-      break;
+  switch (curr_instance.mc.type)
+  {
+  case RPL_DAG_MC_NONE:
+    break;
+  case RPL_DAG_MC_ETX:
+    curr_instance.mc.length = sizeof(curr_instance.mc.obj.etx);
+    curr_instance.mc.obj.etx = path_cost;
+    break;
+  case RPL_DAG_MC_ENERGY:
+    curr_instance.mc.length = sizeof(curr_instance.mc.obj.energy);
+    if (curr_instance.dag.rank == ROOT_RANK)
+    {
+      type = RPL_DAG_MC_ENERGY_TYPE_MAINS;
+    }
+    else
+    {
+      type = RPL_DAG_MC_ENERGY_TYPE_BATTERY;
+    }
+    curr_instance.mc.obj.energy.flags = type << RPL_DAG_MC_ENERGY_TYPE;
+    /* Energy_est is only one byte, use the least significant byte of the path metric. */
+    curr_instance.mc.obj.energy.energy_est = path_cost >> 8;
+    break;
+  default:
+    LOG_WARN("MRHOF, non-supported MC %u\n", curr_instance.mc.type);
+    break;
   }
 }
 #endif /* RPL_WITH_MC */
 /*---------------------------------------------------------------------------*/
 rpl_of_t rpl_mrhof = {
-  reset,
-  nbr_link_metric,
-  nbr_has_usable_link,
-  nbr_is_acceptable_parent,
-  nbr_path_cost,
-  rank_via_nbr,
-  best_parent,
-  update_metric_container,
-  RPL_OCP_MRHOF
-};
+    reset,
+    nbr_link_metric,
+    nbr_has_usable_link,
+    nbr_is_acceptable_parent,
+    nbr_path_cost,
+    rank_via_nbr,
+    best_parent,
+    update_metric_container,
+    RPL_OCP_MRHOF};
 
 /** @}*/

@@ -48,14 +48,14 @@
 /* Log configuration */
 #include "sys/log.h"
 #define LOG_MODULE "RPL"
-#define LOG_LEVEL LOG_LEVEL_RPL
+#define LOG_LEVEL LOG_LEVEL_INFO
 
 /* Constants from RFC6552. We use the default values. */
-#define RANK_STRETCH       0 /* Must be in the range [0;5] */
-#define RANK_FACTOR        1 /* Must be in the range [1;4] */
+#define RANK_STRETCH 0 /* Must be in the range [0;5] */
+#define RANK_FACTOR 1  /* Must be in the range [1;4] */
 
-#define MIN_STEP_OF_RANK   1
-#define MAX_STEP_OF_RANK   9
+#define MIN_STEP_OF_RANK 1
+#define MAX_STEP_OF_RANK 9
 
 /* OF0 computes rank increase as follows:
  * rank_increase = (RANK_FACTOR * STEP_OF_RANK + RANK_STRETCH) * min_hop_rank_increase
@@ -64,28 +64,28 @@
  * such as ETX.
  * */
 
-#define RPL_OF0_FIXED_SR      0
-#define RPL_OF0_ETX_BASED_SR  1
+#define RPL_OF0_FIXED_SR 0
+#define RPL_OF0_ETX_BASED_SR 1
 /* Select RPL_OF0_FIXED_SR or RPL_OF0_ETX_BASED_SR */
 #ifdef RPL_OF0_CONF_SR
-#define RPL_OF0_SR            RPL_OF0_CONF_SR
+#define RPL_OF0_SR RPL_OF0_CONF_SR
 #else /* RPL_OF0_CONF_SR */
-#define RPL_OF0_SR            RPL_OF0_ETX_BASED_SR
+#define RPL_OF0_SR RPL_OF0_ETX_BASED_SR
 #endif /* RPL_OF0_CONF_SR */
 
 #if RPL_OF0_FIXED_SR
-#define STEP_OF_RANK(nbr)       (3)
+#define STEP_OF_RANK(nbr) (3)
 #endif /* RPL_OF0_FIXED_SR */
 
 #if RPL_OF0_ETX_BASED_SR
 /* Numbers suggested by P. Thubert for in the 6TiSCH WG. Anything that maps ETX to
  * a step between 1 and 9 works. */
-#define STEP_OF_RANK(nbr)       (((3 * nbr_link_metric(nbr)) / LINK_STATS_ETX_DIVISOR) - 2)
+#define STEP_OF_RANK(nbr) (((3 * nbr_link_metric(nbr)) / LINK_STATS_ETX_DIVISOR) - 2)
+// #define STEP_OF_RANK(nbr) ((int)((((3 * nbr_link_metric(nbr)) / LINK_STATS_ETX_DIVISOR) - 2) / 2 + 4))
 #endif /* RPL_OF0_ETX_BASED_SR */
 
 /*---------------------------------------------------------------------------*/
-static void
-reset(void)
+static void reset(void)
 {
   LOG_INFO("reset OF0\n");
 }
@@ -93,6 +93,7 @@ reset(void)
 static uint16_t
 nbr_link_metric(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_link_metric\n");
   /* OF0 operates without metric container; the only metric we have is ETX */
   const struct link_stats *stats = rpl_neighbor_get_link_stats(nbr);
   return stats != NULL ? stats->etx : 0xffff;
@@ -101,8 +102,10 @@ nbr_link_metric(rpl_nbr_t *nbr)
 static uint16_t
 nbr_rank_increase(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_rank_increase\n");
   uint16_t min_hoprankinc;
-  if(nbr == NULL) {
+  if (nbr == NULL)
+  {
     return RPL_INFINITE_RANK;
   }
   min_hoprankinc = curr_instance.min_hoprankinc;
@@ -112,7 +115,9 @@ nbr_rank_increase(rpl_nbr_t *nbr)
 static uint16_t
 nbr_path_cost(rpl_nbr_t *nbr)
 {
-  if(nbr == NULL) {
+  // LOG_INFO("nbr_path_cost\n");
+  if (nbr == NULL)
+  {
     return 0xffff;
   }
   /* path cost upper bound: 0xffff */
@@ -122,9 +127,13 @@ nbr_path_cost(rpl_nbr_t *nbr)
 static rpl_rank_t
 rank_via_nbr(rpl_nbr_t *nbr)
 {
-  if(nbr == NULL) {
+  // LOG_INFO("rank_via_nbr\n");
+  if (nbr == NULL)
+  {
     return RPL_INFINITE_RANK;
-  } else {
+  }
+  else
+  {
     return MIN((uint32_t)nbr->rank + nbr_rank_increase(nbr), RPL_INFINITE_RANK);
   }
 }
@@ -132,19 +141,21 @@ rank_via_nbr(rpl_nbr_t *nbr)
 static int
 nbr_has_usable_link(rpl_nbr_t *nbr)
 {
+  // LOG_INFO("nbr_has_usable_link\n");
   return 1;
 }
 /*---------------------------------------------------------------------------*/
 static int
 nbr_is_acceptable_parent(rpl_nbr_t *nbr)
 {
-  return STEP_OF_RANK(nbr) >= MIN_STEP_OF_RANK
-      && STEP_OF_RANK(nbr) <= MAX_STEP_OF_RANK;
+  // LOG_INFO("nbr_is_acceptable_parent\n");
+  return STEP_OF_RANK(nbr) >= MIN_STEP_OF_RANK && STEP_OF_RANK(nbr) <= MAX_STEP_OF_RANK;
 }
 /*---------------------------------------------------------------------------*/
 static rpl_nbr_t *
 best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 {
+  // LOG_INFO("best_parent\n");
   uint16_t nbr1_cost;
   uint16_t nbr2_cost;
   int nbr1_is_acceptable;
@@ -153,24 +164,34 @@ best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
   nbr1_is_acceptable = nbr1 != NULL && nbr_is_acceptable_parent(nbr1);
   nbr2_is_acceptable = nbr2 != NULL && nbr_is_acceptable_parent(nbr2);
 
-  if(!nbr1_is_acceptable) {
+  if (!nbr1_is_acceptable)
+  {
+    // LOG_INFO("nbr1 unacceptable");
     return nbr2_is_acceptable ? nbr2 : NULL;
   }
-  if(!nbr2_is_acceptable) {
+  if (!nbr2_is_acceptable)
+  {
+    // LOG_INFO("nbr2 unacceptable");
     return nbr1_is_acceptable ? nbr1 : NULL;
   }
 
   nbr1_cost = nbr_path_cost(nbr1);
   nbr2_cost = nbr_path_cost(nbr2);
 
+  // LOG_INFO("nbr1_cost %u nbr2_cost %u", nbr1_cost, nbr2_cost);
+
   /* Paths costs coarse-grained (multiple of min_hoprankinc), we operate without hysteresis */
-  if(nbr1_cost != nbr2_cost) {
+  if (nbr1_cost != nbr2_cost)
+  {
     /* Pick nbr with lowest path cost */
     return nbr1_cost < nbr2_cost ? nbr1 : nbr2;
-  } else {
+  }
+  else
+  {
     /* We have a tie! */
     /* Stik to current preferred parent if possible */
-    if(nbr1 == curr_instance.dag.preferred_parent || nbr2 == curr_instance.dag.preferred_parent) {
+    if (nbr1 == curr_instance.dag.preferred_parent || nbr2 == curr_instance.dag.preferred_parent)
+    {
       return curr_instance.dag.preferred_parent;
     }
     /* None of the nodes is the current preferred parent,
@@ -182,19 +203,19 @@ best_parent(rpl_nbr_t *nbr1, rpl_nbr_t *nbr2)
 static void
 update_metric_container(void)
 {
+  // LOG_INFO("update_metric_container\n");
   curr_instance.mc.type = RPL_DAG_MC_NONE;
 }
 /*---------------------------------------------------------------------------*/
 rpl_of_t rpl_of0 = {
-  reset,
-  nbr_link_metric,
-  nbr_has_usable_link,
-  nbr_is_acceptable_parent,
-  nbr_path_cost,
-  rank_via_nbr,
-  best_parent,
-  update_metric_container,
-  RPL_OCP_OF0
-};
+    reset,
+    nbr_link_metric,
+    nbr_has_usable_link,
+    nbr_is_acceptable_parent,
+    nbr_path_cost,
+    rank_via_nbr,
+    best_parent,
+    update_metric_container,
+    RPL_OCP_OF0};
 
 /** @}*/

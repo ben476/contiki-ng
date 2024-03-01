@@ -51,3 +51,5 @@
 #endif
 
 #endif /* PROJECT_CONF_H_ */
+
+#define RPL_CONF_OF_OCP 0

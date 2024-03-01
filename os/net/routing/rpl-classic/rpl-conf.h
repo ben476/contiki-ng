@@ -117,7 +117,7 @@
 #else /* RPL_CONF_SUPPORTED_OFS */
 #define RPL_SUPPORTED_OFS \
   {                       \
-    &rpl_of0            \
+    &rpl_mrhof            \
   }
 #endif /* RPL_CONF_SUPPORTED_OFS */
 
